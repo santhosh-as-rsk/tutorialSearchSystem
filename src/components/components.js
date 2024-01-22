@@ -1,14 +1,47 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import TableComponent from './tablecomponent';
-import AutocompleteComboBox from './autocompleteComboBox';
-import { Button, Stack } from 'react-bootstrap';
+import {AutocompleteComboBox} from './autocompleteComboBox';
+import { Button, Container, Row, Col, NavDropdown } from 'react-bootstrap';
+import Highlighter from 'react-highlight-words';
+import { yellow } from '@mui/material/colors';
+import { Nav, Navbar, NavbarBrand } from 'react-bootstrap';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 export const Header = () => {
+    const [isOpen, setIsOpen] = useState(false);
+
+    const mouseHover = () => {
+        setIsOpen(true);
+    };
+
+    const mouseLeave = () => {
+        setIsOpen(false);
+    };
     return (
-    <div className="header">
-        <h1>Tutorial Search System</h1>
-    </div>
+    <Navbar expand="lg" bg='dark' variant='dark' className='bg-body-teritiary'>
+        <Container>
+        <NavbarBrand> Tutorial Search System</NavbarBrand>
+        <Navbar.Toggle aria-controls='basic-navbar-nav'/>
+        <Navbar.Collapse > 
+            <Nav className="w-50 justify-content-between">
+                <Nav.Link className="font-weight-bold" href='/'> Home </Nav.Link>
+                <NavDropdown
+                    className="font-weight-bold"
+                    title="Tutorial"
+                    show={isOpen}
+                    onMouseEnter={mouseHover}
+                    onMouseLeave={mouseLeave}
+                >
+                    <NavDropdown.Item href='/singleselect'>Single Select</NavDropdown.Item>
+                    <NavDropdown.Item href='/'>Multiple Select</NavDropdown.Item>
+                </NavDropdown>
+                <Nav.Link className="font-weight-bold" href='/'> Contact </Nav.Link>
+                <Nav.Link className="font-weight-bold" href='/'> Others </Nav.Link>
+            </Nav>
+        </Navbar.Collapse>
+        </Container>
+    </Navbar>
     );
 }
 
@@ -25,29 +58,16 @@ export const TopicsSearchBar = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [page, setPage] = useState(1);
     const [initialState, setInitialState] = useState(true);
-
-    const fetchSubTopics= async (params) =>{
-        try{
-            setSelectedSubTopic(null);
-            const response = await axios.get("http://localhost:8080/api/fetchSubTopics", {params: params});
-            const data = response.data;
-            setSubtopics(data);
-            if(initialState){ setSelectedSubTopic(data[0].name); }
-            
-        }
-        catch(error){
-            console.error(error);
-        }
-    };
     
     const fetchTableData = async ( page = 1, perPage=10) => {
         if(selectedTopic&&selectedSubTopic&&page&&perPage){
         try {
             const adjustPage = page-1;
-            const response = await axios.get(`http://localhost:8080/api/fetchTutorialLinks?topicName=${selectedTopic}&subTopicName=${selectedSubTopic}&page=${adjustPage}&size=${perPage}`);         
-            setTutorialLink(response.data.tutorialLink);
-            setData(response.data.tutorialLink);
-            setTotalRows(response.data.toltalCount);
+            const response = await axios.get(`http://localhost:8080/api/fetchTutorialLinks?topicName=${selectedTopic}&subTopicName=${selectedSubTopic}&page=${adjustPage}&size=${perPage}`);
+            let outputData = response.data.outputData
+            setTutorialLink(outputData.tutorialLink);
+            setData(outputData.tutorialLink);
+            setTotalRows(outputData.toltalCount);
         } catch (error) {
             console.error('Error fetching data:', error);
         } finally{
@@ -59,11 +79,24 @@ export const TopicsSearchBar = () => {
       const columns = [
         {
           name: 'links',
-          selector: row => <a href={row.links} target='_blank' rel="noopener noreferrer" >{row.links}</a>,
+          selector: row => 
+          <a href={row.links} target='_blank' rel="noopener noreferrer" >
+            <Highlighter 
+                activeStyle={{backgroundColor: yellow}}
+                searchWords={[searchTerm]}
+                autoEscape={true}
+                textToHighlight={row.links}
+            />
+            </a>,
         },
         {
             name: "source",
-            selector: row=> row.sourceId.name,
+            selector: row=> 
+            <Highlighter 
+                searchWords={[searchTerm]}
+                autoEscape={true}
+                textToHighlight={row.sourceId.name}
+            />,
             sortable: true, 
         }
       ];
@@ -84,9 +117,11 @@ export const TopicsSearchBar = () => {
       const handleSearch = (changedvalue) => {
         setSearchTerm(changedvalue);
         const filteredLinks = tutorialLink.filter((link) =>
-          link.links.includes(searchTerm) || link.sourceId.name.includes(searchTerm)
-        );
+        (link.links && link.links.toLowerCase().indexOf(changedvalue.toLowerCase()) !== -1) ||
+        (link.sourceId && link.sourceId.name && link.sourceId.name.toLowerCase().indexOf(changedvalue.toLowerCase) !== -1)
+    );
         setData(filteredLinks);
+        setTotalRows(filteredLinks.length)
       };
 
       useEffect(()=>{
@@ -98,7 +133,7 @@ export const TopicsSearchBar = () => {
         const fetchTopics= async () =>{
             try{
                 const response = await axios.get("http://localhost:8080/api/fetchTopics");
-                const data = response.data;
+                const data = response.data.outputData;
                 setTopics(data);
                 if (initialState){ setSelectedTopic(data[0].name); }
             }
@@ -114,7 +149,20 @@ export const TopicsSearchBar = () => {
             let params = {
                 topicName: selectedTopic
             };
-        fetchSubTopics(params);}
+            const fetchSubTopics= async () =>{
+                try{
+                    setSelectedSubTopic(null);
+                    const response = await axios.get("http://localhost:8080/api/fetchSubTopics", {params: params});
+                    const data = response.data.outputData;
+                    setSubtopics(data);
+                    if(initialState){ setSelectedSubTopic(data[0].name); }
+                    
+                }
+                catch(error){
+                    console.error(error);
+                }
+            };
+        fetchSubTopics();}
     },[selectedTopic]);
 
     useEffect(()=>{
@@ -136,18 +184,21 @@ export const TopicsSearchBar = () => {
     }
     return(
         <React.Fragment>
-            <div style={{ width:'95%', marginLeft: '30px', marginRight:"30px" }}>
-            <Stack direction="horizontal" gap={5} className=" mx-auto">
-                <div className="p-2 col-md-4">
-                    <AutocompleteComboBox topics={topics} selectedTopics={setSelectedTopic} lableName="Topic" value={selectedTopic} />
-                </div>
-                <div className="p-2 col-md-4">
-                    <AutocompleteComboBox topics={subtopics} selectedTopics={setSelectedSubTopic} lableName="Sub Topic" value={selectedSubTopic} />
-                </div>
-                <div className="p-2 ms-auto">
-                    <Button variant='success' onClick={submitOnclick}>submit</Button>
-                </div>
-            </Stack>
+            <Container fluid className="mt-5"> 
+                <Row className="justify-content-center"> 
+                    <Col xs={12} md={6} lg={4} className="mb-3"> 
+                        <AutocompleteComboBox topics={topics} selectedTopics={setSelectedTopic} lableName="Topic" value={selectedTopic} />
+                    </Col>
+                        
+                    <Col xs={12} md={6} lg={4} className="mb-3 mx-auto"> 
+                        <AutocompleteComboBox topics={subtopics} selectedTopics={setSelectedSubTopic} lableName="Sub Topic" value={selectedSubTopic} />
+                    </Col>
+                        
+                    <Col xs={12} md={6} lg={4} className="mb-3 text-md-end"> 
+                        <Button variant='success' onClick={submitOnclick}>submit</Button>
+                    </Col>
+                </Row>
+            </Container>
             <br></br>
             <TableComponent
                 data={data}
@@ -159,7 +210,6 @@ export const TopicsSearchBar = () => {
                 paginationPerPage = {perPage}
                 loading={loading}
             />
-        </div>
         </React.Fragment>
     );
 }

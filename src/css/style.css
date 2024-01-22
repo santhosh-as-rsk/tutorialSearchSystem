@@ -1,10 +1,8 @@
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-}
-
-.header {
-    background-color: #a9a9a9;
-    padding: 10px;
-    text-align: center;
+.sub-header-container {
+    display: flex;
+    justify-content: space-between;
+  }
+  
+  .sub-header-item {
+    margin-bottom: 10px; /* Adjust the margin as needed */
   }
