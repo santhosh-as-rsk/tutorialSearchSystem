@@ -39,7 +39,6 @@ const DownloadComponent = (props)=>{
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
-            console.log('filename')
             const blob = await response.blob();
             const link = document.createElement('a');
             link.href = window.URL.createObjectURL(blob);
@@ -53,7 +52,7 @@ const DownloadComponent = (props)=>{
         });
     }
     const onClick = ()=>{
-        if(props.data.length>0){
+        if(props.data.length>0 && props.fileType !==null){
             if (props.fileType === 'CSV'){ downloadFile("csv"); }
             else if(props.fileType === 'Excel'){ downloadxl(); }
             else if(props.fileType === 'Text'){ downloadFile("txt");}
@@ -61,8 +60,7 @@ const DownloadComponent = (props)=>{
             props.setFileType(null)
         }
         else{
-            props.openPopup(false);
-            alert("please select Topics and sub topics"); 
+            alert("please select Export File Type"); 
         }
     }
 

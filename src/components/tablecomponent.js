@@ -5,8 +5,12 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import Button from 'react-bootstrap/Button';
 import { Modal, Form } from 'react-bootstrap';
 import DownloadComponent from './downloadComponent';
-
-import "../css/style.css";
+import {InputAdornment} from '@mui/material';
+import axios from 'axios';
+import IconButton from '@mui/material/IconButton';
+import SearchIcon from '@mui/icons-material/Search';
+import DownloadIcon from '@mui/icons-material/Download';
+import UploadIcon from '@mui/icons-material/Upload';
 
 const customStyles = {
   header: {
@@ -38,23 +42,36 @@ const customStyles = {
 
 const TableComponent = (props) => {
 
-  const [open, setOpen] = useState(false)
-  const [fileType, setFileType] = useState(null)
+  const [open, setOpen] = useState(false);
+  const [fileType, setFileType] = useState(null);
+  const [importModal, setImportModal] = useState(false);
+  const [file, setFile] = useState(null);
 
   const onChange = (event) => {
-    setFileType(event.target.value)
+    setFileType(event.target.value);
+  }
+  const onChangeFile = (event)=>{
+    setFile(event.target.files[0]);
+  }
+  const onImportClick = async () => {
+    if (file === null){
+      alert("please select the file");
+    }else{
+      const formdata = new FormData();
+      formdata.append("file", file, file.name)
+      const response  = await axios.post("http://localhost:8080/api/upload", formdata)
+      setImportModal(false)
+      setFile(null)
+      if (response.data.statusCode === 200){
+        alert("File Uploaded Successfully")}
+      else if (response.data.statusCode === 500){
+          alert("check the orderof the column:- example order[Topics, SubTopics, Links, Source]")
+        }
+    } 
   }
   return (
     <div>
-    <div className='d-flex flex-row justify-content-between mb-3'>
-          <Button variant="success" onClick={() => setOpen(true)} style={{height:'40px'}}>Export</Button>
-          <TextField
-            variant="outlined"
-            label="Search"
-            sx={{ width: 300 }}
-            onChange={e => props.handleSearch(e.target.value)}
-          />
-      </div>
+    
       <DataTable
         columns={props.columns}
         data={props.data}
@@ -72,6 +89,38 @@ const TableComponent = (props) => {
         paginationRowsPerPageOptions={[5, 10, 15, 20, 30, 40]}
         fixedHeader
         customStyles={customStyles}
+        subHeader
+        subHeaderAlign='right'
+        subHeaderComponent={
+          <div  style={{display:'flex',gap:'10px'}}>
+          <TextField
+            variant="outlined"
+            label="Search"
+            sx={{
+              width: {
+                xs: '100%',
+                sm: 300,
+              },
+            }}
+            onChange={e => props.handleSearch(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            }}
+          />
+          {/* <Button variant="success" onClick={() => setOpen(true)} style={{height:'40px'}}><img style={{width:"33px", paddingBottom:"3px"}} src={ExportIcon} alt="fireSpot" title='Export'/> </Button>
+          <Button variant="success" onClick={() => setImportModal(true)} style={{height:'40px'}}><img style={{width:"28px"}} src={ImportIcon} alt="fireSpot" title="Import"/> </Button> */}
+          <IconButton color="success" Title="Export" onClick={() => setOpen(true)} aria-label="export">
+            <DownloadIcon  />
+          </IconButton>
+          <IconButton color="success" Title="Import" onClick={() => setImportModal(true)} aria-label="import">
+            <UploadIcon  />
+          </IconButton>
+      </div>
+        }
       />
       
       <Modal
@@ -87,7 +136,7 @@ const TableComponent = (props) => {
           </Modal.Title>
         </Modal.Header>
         <Modal.Body style={{ padding: 30 }}>
-
+          <h5>Select File Format</h5>
           <Form.Select aria-label="Default select" style={{ padding: 10 }} value={fileType} onChange={onChange}>
             <option>Select File Type</option>
             <option value="CSV">CSV</option>
@@ -97,6 +146,27 @@ const TableComponent = (props) => {
         </Modal.Body>
         <Modal.Footer>
           <DownloadComponent data={props.data} fileType={fileType} setFileType={setFileType} openPopup={setOpen} />
+        </Modal.Footer>
+      </Modal>
+
+      <Modal
+        show={importModal}
+        onHide={() => setImportModal(false)}
+        size="lg"
+        aria-labelledby="contained-modal-title-vcenter"
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title id="contained-modal-title-vcenter">
+            Import File
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ padding: 30 }}>
+          <h5>Upload a file to import</h5>
+        <input type='file' onChange={onChangeFile} />
+        </Modal.Body>
+        <Modal.Footer>
+          <Button onClick={onImportClick}>Upload</Button>
         </Modal.Footer>
       </Modal>
 

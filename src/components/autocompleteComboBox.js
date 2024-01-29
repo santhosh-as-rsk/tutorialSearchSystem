@@ -4,6 +4,8 @@ import Autocomplete from '@mui/material/Autocomplete';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import { useRef, useState } from 'react';
+import ManageSearchIcon from '@mui/icons-material/ManageSearch';
+import {InputAdornment} from '@mui/material';
 
 export const AutocompleteComboBox = ((props) => {
   const theme = useTheme();
@@ -75,6 +77,14 @@ export const AutocompleteComboBox = ((props) => {
         {...params}
         variant="outlined" 
         label={props.lableName[0].toUpperCase() + props.lableName.slice(1)}
+        InputProps={{
+          ...params.InputProps,
+          startAdornment: (
+            <InputAdornment position="start">
+              <ManageSearchIcon />
+            </InputAdornment>
+          ),
+        }}
         />}
     />
     </div>

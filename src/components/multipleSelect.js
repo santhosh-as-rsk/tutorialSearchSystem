@@ -1,7 +1,7 @@
 import React,{useEffect, useState} from 'react';
 import "../css/style.css";
 import 'bootstrap/dist/css/bootstrap.min.css';
-import {AutocompleteMultipleSelect} from './autocompleteComboBox';
+import { AutocompleteMultipleSelect } from './autocompleteComboBox';
 import axios from 'axios';
 import { Button, Container, Col, Row } from 'react-bootstrap';
 import TableComponent from './tablecomponent';
@@ -89,7 +89,7 @@ export function MultiSelectTopicsSearchBar (){
                   activeStyle={{backgroundColor: "yellow"}}
                   searchWords={[searchTerm]}
                   autoEscape={true}
-                  textToHighlight={row.subTopicsId.topicsID.name}
+                  textToHighlight={row.subTopicsId.topicsId.name}
               />,
         },
         {
@@ -144,7 +144,7 @@ export function MultiSelectTopicsSearchBar (){
         const filteredLinks = tutorialLink.filter((link) =>
         (link.links && link.links.toLowerCase().indexOf(changedvalue.toLowerCase()) !== -1) ||
         (link.subTopicsId.name && link.subTopicsId.name.toLowerCase().indexOf(changedvalue.toLowerCase()) !== -1) ||
-        (link.subTopicsId.topicsID.name && link.subTopicsId.topicsID.name.toLowerCase().indexOf(changedvalue.toLowerCase()) !== -1) ||
+        (link.subTopicsId.topicsId.name && link.subTopicsId.topicsId.name.toLowerCase().indexOf(changedvalue.toLowerCase()) !== -1) ||
         (link.sourceId && link.sourceId.name && link.sourceId.name.toLowerCase().indexOf(changedvalue.toLowerCase) !== -1)
     );
         setData(filteredLinks);
